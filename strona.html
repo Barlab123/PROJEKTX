@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Wirtualny Fitting — realistyczna sylwetka</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+    body{
+        margin:0;
+        background:#f5f5f5;
+        font-family:Inter,Arial;
+        display:flex;
+        justify-content:center;
+        padding:24px;
+        gap:40px;
+    }
+    .panel{
+        width:360px;
+        background:white;
+        padding:20px;
+        border-radius:12px;
+        border:1px solid #ddd;
+    }
+    h1{margin:0 0 16px;font-size:20px}
+    label{margin-top:12px;display:block;font-weight:600}
+    input,select{
+        width:100%;padding:10px;border-radius:8px;
+        border:1px solid #ccc;margin-top:6px;
+        background:#fafafa;
+    }
+    button{
+        padding:12px 18px;
+        border-radius:10px;
+        border:0;
+        background:#111;
+        color:white;
+        font-weight:700;
+        margin-top:20px;
+        cursor:pointer;
+    }
+    .frameWrap{
+        width:420px;
+        height:760px;
+        background:white;
+        border-radius:16px;
+        border:1px solid #ddd;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow:0 8px 24px rgba(0,0,0,0.06);
+    }
+</style>
+</head>
+
+<body>
+
+<!-- LEWY PANEL -->
+<div class="panel">
+    <h1>Wirtualny Fitting — realistyczna sylwetka</h1>
+
+    <label>Wzrost (cm)</label>
+    <input id="h" type="number" value="175">
+
+    <label>Waga (kg)</label>
+    <input id="w" type="number" value="75">
+
+    <label>Obwód klatki (cm)</label>
+    <input id="ch" type="number" value="100">
+
+    <label>Obwód pasa (cm)</label>
+    <input id="ws" type="number" value="85">
+
+    <label>Obwód bioder (cm)</label>
+    <input id="hp" type="number" value="95">
+
+    <label>Typ sylwetki</label>
+    <select id="body">
+        <option value="female">Kobieca</option>
+        <option value="male">Męska</option>
+        <option value="neutral">Neutralna</option>
+    </select>
+
+    <button onclick="update()">Aktualizuj</button>
+</div>
+
+
+<!-- PRAWE OKNO -->
+<div class="frameWrap">
+    <svg id="avatar" width="340" height="700" viewBox="0 0 340 700">
+
+        <!-- tułów + kształt -->
+        <path id="torso" fill="none" stroke="#222" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- lewe ramię -->
+        <path id="armL" fill="none" stroke="#222" stroke-width="4" stroke-linecap="round"/>
+
+        <!-- prawe ramię -->
+        <path id="armR" fill="none" stroke="#222" stroke-width="4" stroke-linecap="round"/>
+
+        <!-- nogi -->
+        <path id="legL" fill="none" stroke="#222" stroke-width="4" stroke-linecap="round"/>
+        <path id="legR" fill="none" stroke="#222" stroke-width="4" stroke-linecap="round"/>
+
+        <!-- głowa -->
+        <circle id="head" cx="170" cy="110" r="38" stroke="#222" stroke-width="4" fill="white"/>
+
+        <!-- szyja -->
+        <path id="neck" fill="none" stroke="#222" stroke-width="4" stroke-linecap="round"/>
+
+        <!-- linia ziemi -->
+        <line x1="40" x2="300" y1="680" y2="680" stroke="#ddd" stroke-width="3"/>
+    </svg>
+</div>
+
+<script>
+function update(){
+    let H = Number(h.value);
+    let chest = Number(ch.value);
+    let waist = Number(ws.value);
+    let hips = Number(hp.value);
+    let type = body.value;
+
+    // PROPORCJE BAZOWE
+    let shoulder = (type==="male"? 135 : type==="female"? 115 : 125);
+    let pelvis   = (type==="male"? 95 : type==="female"? 115 : 110);
+
+    // SKALA Z WYMIARÓW
+    shoulder *= chest / 100;
+    pelvis   *= hips / 95;
+
+    // POZYCJE
+    let top = 170;  // barki
+    let chestY = top + 40;
+    let waistY = chestY + 70;
+    let hipY   = waistY + 70;
+    let crotch = hipY + 45;
+    let legBottom = 660;
+
+    // TUŁÓW
+    let dTorso =
+        `M ${170-shoulder/2} ${top}
+         C ${170-shoulder/2} ${top+20} ${170-shoulder/2+10} ${chestY} ${170-waist/1.8} ${waistY}
+         C ${170-pelvis/2} ${hipY} ${170-pelvis/3} ${hipY+35} 170 ${crotch}
+         C ${170+pelvis/3} ${hipY+35} ${170+pelvis/2} ${hipY} ${170+waist/1.8} ${waistY}
+         C ${170+shoulder/2-10} ${chestY} ${170+shoulder/2} ${top+20} ${170+shoulder/2} ${top}
+        `;
+
+    torso.setAttribute("d", dTorso);
+
+    // RAMIONA
+    armL.setAttribute("d", `M ${170-shoulder/2} ${top+5} C ${170-shoulder/2-40} ${top+70} ${170-shoulder/2-35} ${top+150} ${170-shoulder/2-10} ${top+210}`);
+    armR.setAttribute("d", `M ${170+shoulder/2} ${top+5} C ${170+shoulder/2+40} ${top+70} ${170+shoulder/2+35} ${top+150} ${170+shoulder/2+10} ${top+210}`);
+
+    // NOGI
+    legL.setAttribute("d", `M ${170-pelvis/2} ${crotch} C ${170-pelvis/2-10} ${crotch+90} ${170-pelvis/2-5} ${crotch+180} ${170-pelvis/2+5} ${legBottom}`);
+    legR.setAttribute("d", `M ${170+pelvis/2} ${crotch} C ${170+pelvis/2+10} ${crotch+90} ${170+pelvis/2+5} ${crotch+180} ${170+pelvis/2-5} ${legBottom}`);
+
+    // SZYJA
+    neck.setAttribute("d", `M 160 140 C 162 158 178 158 180 140`);
+}
+
+update();
+</script>
+
+</body>
+</html>
